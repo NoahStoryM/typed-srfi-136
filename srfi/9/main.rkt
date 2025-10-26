@@ -159,4 +159,13 @@
            (make-Typeof field-tag.op ...))
          (define record? (cast Typeof? (pred TypeTop)))
 
-         field-def ...))]))
+         field-def ...))]
+    [(_ Type:id
+        (make-record:id field-tag:tag ...)
+        record?:id
+        field-spec:spec ...)
+     (syntax/loc stx
+       (define-record-type () Type
+         (make-record field-tag ...)
+         record?
+         field-spec ...))]))

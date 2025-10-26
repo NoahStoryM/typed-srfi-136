@@ -12,6 +12,7 @@
   (: b (Mutable-Boxof Natural Integer))
   (define b (box -111))
   (check-pred box? b)
+  (check-pred box? (ann b (Mutable-Boxof Byte Number)))
 
   (check-eqv? (unbox b) -111)
   (set-box! b 0)
@@ -41,6 +42,7 @@
   (: p (Mutable-Pairof Natural Integer Zero Byte))
   (define p (mcons -1 1))
   (check-pred mpair? p)
+  (check-pred mpair? (ann p (Mutable-Pairof Byte Number Nothing Natural)))
 
   (check-eqv? (mcar p) -1)
   (set-mcar! p 1)
