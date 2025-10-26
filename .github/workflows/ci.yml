@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Racket
+        uses: Bogdanp/setup-racket@v1.14
+        with:
+          architecture: x64
+          distribution: full
+          version: stable
+
+      - name: Install
+        run: raco pkg install --auto
+
+      - name: Run tests
+        run: raco test -p typed-srfi-9
