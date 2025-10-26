@@ -42,7 +42,8 @@ this type. Violating this constraint would allow writing values
 that couldn't be safely read back.
 }
 
-@defform[(define-record-type maybe-type-vars type-name
+@defform[#:literals (:)
+         (define-record-type maybe-type-vars type-name
            (constructor-name field-tag ...)
            predicate-name
            field-spec ...)
