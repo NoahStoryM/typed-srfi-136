@@ -65,8 +65,7 @@
              #:with id #'name
              #:with r0 #'r.base
              #:with spec #'[name : (case→ (→ r) (→ w Void))]
-             #:with op #'(ann (case-λ [() name] [(v) (set! name v)])
-                              (case→ (→ r.base) (→ w.base Void)))]
+             #:with op #'(case-λ [() name] [([v : w.base]) (set! name v)])]
     [pattern [name:id (~datum :) t:type]
              #:with id #'name
              #:with r0 #'t.base
