@@ -1,0 +1,37 @@
+#+TITLE: Typed SRFI 9: Defining Record Types with Variance Annotations
+#+AUTHOR: Noah Ma
+#+EMAIL: noahstorym@gmail.com
+
+* Table of Contents                                       :TOC_5_gh:noexport:
+- [[#typed-srfi-9-typed-record-types-with-variance][Typed SRFI 9: Typed Record Types with Variance]]
+  - [[#installation][Installation]]
+  - [[#usage][Usage]]
+  - [[#license][License]]
+
+* Typed SRFI 9: Typed Record Types with Variance
+This library provides a typed version of SRFI 9 (Defining Record Types) for
+Typed Racket, with support for variance annotations on type parameters. It allows
+you to define record types with precise control over the subtyping relationships
+of their fields.
+
+*Variance* determines how subtyping of type parameters affects the subtyping of
+the whole type:
+- *Contravariant* (=-= prefix): Reverses subtyping order.
+   If =a= is a subtype of =b=, then =(F b)= is a subtype of =(F a)=.
+- *Covariant* (=+= or no prefix): Preserves subtyping order.
+   If =a= is a subtype of =b=, then =(F a)= is a subtype of =(F b)=.
+
+** Installation
+You can install the package from the Racket package manager using:
+#+begin_src shell
+raco pkg install typed-srfi-9
+#+end_src
+
+** Usage
+Require the library:
+#+begin_src racket
+(require typed/srfi/9)
+#+end_src
+
+** License
+~typed-srfi-9~ is distributed under the MIT License.
