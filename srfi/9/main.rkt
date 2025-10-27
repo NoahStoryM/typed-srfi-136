@@ -107,9 +107,9 @@
        (syntax-parse field
          #:datum-literals (:)
          [([name:id : w:type r:type] . [_ get:id set:id])
-          #:with Typeof-name (format-id #f "~a-~a" Type #'name)
-          #:with ((-t ...) . -Top) (parse-type #'w)
-          #:with ((+t ...) . +Top) (parse-type #'r)
+          #:with Typeof-name:id (format-id #f "~a-~a" Type #'name)
+          #:with ((-t:id ...) . -Top) (parse-type #'w)
+          #:with ((+t:id ...) . +Top) (parse-type #'r)
           (syntax/loc stx
             (begin
               (: set (∀ (-t ...) (→ -Top w Void)))
@@ -117,8 +117,8 @@
               (define (set record name) ((Typeof-name record) name))
               (define (get record) ((Typeof-name record)))))]
          [([name:id : t:type] . [_ get:id])
-          #:with Typeof-name (format-id #f "~a-~a" Type #'name)
-          #:with ((+t ...) . +Top) (parse-type #'t)
+          #:with Typeof-name:id (format-id #f "~a-~a" Type #'name)
+          #:with ((+t:id ...) . +Top) (parse-type #'t)
           (syntax/loc stx
             (begin
               (: get (∀ (+t ...) (→ +Top t)))
@@ -126,27 +126,29 @@
 
 (define-syntax (define-record-type stx)
   (syntax-parse stx
-    [(_ (~or* (~seq) () (t* ...+)) Type:id
+    [(_ (~or* (~seq) () (t*:id ...+)) Type:id
         (make-record:id field-tag:tag ...)
         record?:id
         .
         field-spec*)
      #:with (t:type-para ...) (if (attribute t*) #'(t* ...) #'())
-     #:with Typeof  (datum->syntax #f (syntax-e #'Type))
-     #:with Typeof? (format-id #f "~a?" (syntax-e #'Type))
-     #:with TypeTop (format-id #'Type "~aTop" (syntax-e #'Type))
-     #:with TypeBot (format-id #'Type "~aBot" (syntax-e #'Type))
-     #:with (t0 ...) (datum->syntax #'Type (remove-duplicates (syntax->datum #'(t.base ...))))
+     #:with Typeof:id  (datum->syntax #f (syntax-e #'Type))
+     #:with Typeof?:id (format-id #f "~a?" (syntax-e #'Type))
+     #:with TypeTop:id (format-id #'Type "~aTop" (syntax-e #'Type))
+     #:with TypeBot:id (format-id #'Type "~aBot" (syntax-e #'Type))
+     #:with (t0:id ...) (datum->syntax #'Type (remove-duplicates (syntax->datum #'(t.base ...))))
      #:with (field-spec:spec ...)
+     ;; Match field specifications with field tags
      (let ([data-hash
             (for/hasheq ([field-spec (in-list (syntax->list #'field-spec*))])
               (syntax-parse field-spec
                 [[name:id . _]
                  (values (syntax-e #'name) field-spec)]))])
-       (for/list ([field-tag (in-list (syntax->list #'(field-tag ...)))])
-         (syntax-parse field-tag
-           [[name:id . _]
-            (hash-ref data-hash (syntax-e #'name))])))
+       (datum->syntax #'field-spec*
+        (for/list ([field-tag (in-list (syntax->list #'(field-tag ...)))])
+          (syntax-parse field-tag
+            [[name:id . _]
+             (hash-ref data-hash (syntax-e #'name))]))))
      #:with (field-def ...)
      (generate-field-accessors
        #'Type
@@ -160,11 +162,13 @@
            (field-tag.spec ...)
            #:constructor-name make-Typeof)
          #,(if (attribute t*)
+               ;; Type definitions for polymorphic case
                #'(begin
                    (define-type (Type t ...) (Typeof t ...))
                    (define-type TypeTop (Type t.Top ...))
                    (define-type TypeBot (Type t.Bot ...))
                    (: make-record (∀ (t0 ...) (→ field-tag.r0 ... (Type t.base ...)))))
+               ;; Type definitions for non-polymorphic case
                #'(begin
                    (define-type Type Typeof)
                    (define-type TypeTop Type)
