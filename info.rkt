@@ -7,7 +7,7 @@
 (define pkg-desc "Typed Record")
 
 (define deps '("base" "typed-racket-lib"))
-(define build-deps '("scribble-lib" "rackunit-typed" "racket-doc"))
+(define build-deps '("scribble-lib" "rackunit-typed" "racket-doc" "typed-racket-doc"))
 
 (define scribblings '(("srfi/9/scribblings/typed-srfi-9.scrbl")))
 
