@@ -10,25 +10,20 @@
 
 
 (begin-for-syntax
-  (define (variance->top-type type-stx)
-    ;; Determine the Top type based on variance annotation
-    ;; If type parameter starts with '-', it's contravariant (Top = Nothing)
-    ;; Otherwise, it's covariant (Top = Any)
-    (define type-str (symbol->string (syntax-e type-stx)))
-    (if (and (positive? (string-length type-str))
-             (char=? #\- (string-ref type-str 0)))
-        #'Nothing
-        #'Any))
-
-  (define (variance->bot-type type-stx)
-    ;; Determine the Bottom type based on variance annotation
-    ;; If type parameter starts with '-', it's contravariant (Bot = Any)
-    ;; Otherwise, it's covariant (Bot = Nothing)
-    (define type-str (symbol->string (syntax-e type-stx)))
-    (if (and (positive? (string-length type-str))
-             (char=? #\- (string-ref type-str 0)))
-        #'Any
-        #'Nothing))
+  (define-values (variance->top-type variance->bot-type)
+    ;; Determine the Top type and Bottom Type based on variance annotation
+    ;; If type parameter starts with '-', it's contravariant
+    ;; (Top = Nothing and Bot = Any)
+    ;; Otherwise, it's covariant
+    ;; (Top = Any and Bot = Nothing)
+    (let ()
+      (define ((variance->type bot top) type-stx)
+        (define type-str (symbol->string (syntax-e type-stx)))
+        (if (and (positive? (string-length type-str))
+                 (char=? #\- (string-ref type-str 0)))
+            bot top))
+      (values (variance->type #'Nothing #'Any)
+              (variance->type #'Any #'Nothing))))
 
   (define (strip-variance-prefix stx)
     ;; Strip variance prefix (- or +) from type parameter
