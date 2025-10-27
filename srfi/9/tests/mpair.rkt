@@ -22,8 +22,8 @@
     (make-mpair [b1 : (Mutable-Boxof -t1 +t1)]
                 [b2 : (Mutable-Boxof -t2 +t2)])
     mpair?
-    [b1 get-b1]
-    [b2 get-b2])
+    [b2 get-b2]
+    [b1 get-b1])
 
   (: mcons (∀ (t1 t2) (→ t1 t2 (Mutable-Pairof t1 t1 t2 t2))))
   (define (mcons v1 v2) (make-mpair (box v1) (box v2)))

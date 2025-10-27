@@ -129,13 +129,24 @@
     [(_ (~or* (~seq) () (t* ...+)) Type:id
         (make-record:id field-tag:tag ...)
         record?:id
-        field-spec:spec ...)
+        .
+        field-spec*)
      #:with (t:type-para ...) (if (attribute t*) #'(t* ...) #'())
      #:with Typeof  (datum->syntax #f (syntax-e #'Type))
      #:with Typeof? (format-id #f "~a?" (syntax-e #'Type))
      #:with TypeTop (format-id #'Type "~aTop" (syntax-e #'Type))
      #:with TypeBot (format-id #'Type "~aBot" (syntax-e #'Type))
      #:with (t0 ...) (datum->syntax #'Type (remove-duplicates (syntax->datum #'(t.base ...))))
+     #:with (field-spec:spec ...)
+     (let ([data-hash
+            (for/hasheq ([field-spec (in-list (syntax->list #'field-spec*))])
+              (syntax-parse field-spec
+                [[name:id . _]
+                 (values (syntax-e #'name) field-spec)]))])
+       (for/list ([field-tag (in-list (syntax->list #'(field-tag ...)))])
+         (syntax-parse field-tag
+           [[name:id . _]
+            (hash-ref data-hash (syntax-e #'name))])))
      #:with (field-def ...)
      (generate-field-accessors
        #'Type

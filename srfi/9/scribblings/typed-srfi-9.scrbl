@@ -127,8 +127,8 @@ data structures. The type @racket[(Mutable-Box Natural Integer)] means:
   (make-mpair [b1 : (Mutable-Box -t1 +t1)]
               [b2 : (Mutable-Box -t2 +t2)])
   MPAIR?
-  [b1 get-b1]
-  [b2 get-b2])
+  [b2 get-b2]
+  [b1 get-b1])
 
 (:print-type make-mpair)
 (:print-type MPAIR?)
