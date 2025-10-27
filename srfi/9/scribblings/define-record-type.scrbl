@@ -34,14 +34,6 @@ is a subtype of @racket[(F w1 r1)] if and only if:
 
 @section{Syntax}
 
-@margin-note{
-@racket[write-type] must be a subtype of @racket[read-type].
-This ensures type safety: since reading returns values of type
-@racket[read-type], any value written must be compatible with
-this type. Violating this constraint would allow writing values
-that couldn't be safely read back.
-}
-
 @defform[#:literals (:)
          (define-record-type maybe-type-vars type-name
            (constructor-name field-tag ...)
@@ -78,6 +70,7 @@ Defines a new @deftech{record type} with optional type parameters and
 ]
 
 This form defines the following:
+
 @itemlist[
   @item{A struct type named @racket[type-name].}
   @item{Type aliases:
@@ -86,7 +79,12 @@ This form defines the following:
                 (e.g., @racket[Any] for @tech{covariant}, @racket[Nothing] for @tech{contravariant}).}
           @item{@racket[type-name]@racketidfont{Bot}: all parameters at their bottom bound
                 (e.g., @racket[Nothing] for @tech{covariant}, @racket[Any] for @tech{contravariant}).}]}
-  @item{A @racket[constructor-name] procedure to create instances of the record.}
+  @item{A @racket[constructor-name] procedure to create instances of the record.
+        For mutable fields, the @racket[write-type] must be a subtype of the
+        @racket[read-type]. To satisfy this subtyping constraint from the very
+        beginning in the simplest way, the @tech{variance} prefixes
+        (@litchar{-} and @litchar{+}) are stripped from the type parameters
+        when generating the constructor's type.}
   @item{A @racket[predicate-name] procedure (predicate for @racket[type-name]@racketidfont{Top}).}
   @item{An @racket[accessor-name] for each field.}
   @item{A @racket[mutator-name] for each mutable field.}
@@ -95,10 +93,9 @@ This form defines the following:
 
 @section{Examples}
 
-@subsection{Mutable Box}
-
-A simple mutable box demonstrating @tech{variance}. The type
-@racket[(Mutable-Boxof Natural Integer)] means:
+A simple mutable box demonstrating @tech{variance}, and a mutable pair composed
+from mutable boxes, illustrating how @tech{variance} propagates through nested
+data structures. The type @racket[(Mutable-Box Natural Integer)] means:
 
 @itemlist[
   @item{You can @italic{write} values of type @racket[Natural] (or any subtype)
@@ -107,56 +104,59 @@ A simple mutable box demonstrating @tech{variance}. The type
         from the box, demonstrating @deftech{covariance} of the read type.}
 ]
 
-@racketblock[
-(define-record-type (-t1 +t1) Mutable-Boxof
-  (box [v : -t1 +t1])
-  box?
-  [v unbox set-box!])
+@typed-srfi-9-examples[
+(define-record-type (-t1 +t1) Mutable-Box
+  (BOX [v : -t1 +t1])
+  BOX?
+  [v UNBOX SET-BOX!])
 
-(: b (Mutable-Boxof Natural Integer))
-(define b (box -111))
-(box? (ann b (Mutable-Boxof Byte Number)))
+(:print-type BOX)
+(:print-type BOX?)
+(:print-type UNBOX)
+(:print-type SET-BOX!)
 
-(unbox b)
-(set-box! b 0)
-(unbox b)
-]
+(: b (Mutable-Box Natural Integer))
+(define b (BOX -111))
+(BOX? (ann b (Mutable-Box Byte Number)))
 
-@subsection{Mutable Pair}
+(UNBOX b)
+(SET-BOX! b 0)
+(UNBOX b)
 
-A mutable pair composed from mutable boxes, illustrating how @tech{variance}
-propagates through nested data structures.
-
-@racketblock[
-(define-record-type (-t1 +t1 -t2 +t2) Mutable-Pairof
-  (make-mpair [b1 : (Mutable-Boxof -t1 +t1)]
-              [b2 : (Mutable-Boxof -t2 +t2)])
-  mpair?
+(define-record-type (-t1 +t1 -t2 +t2) Mutable-Pair
+  (make-mpair [b1 : (Mutable-Box -t1 +t1)]
+              [b2 : (Mutable-Box -t2 +t2)])
+  MPAIR?
   [b1 get-b1]
   [b2 get-b2])
 
-(: mcons (∀ (t1 t2) (→ t1 t2 (Mutable-Pairof t1 t1 t2 t2))))
-(define (mcons v1 v2) (make-mpair (box v1) (box v2)))
+(:print-type make-mpair)
+(:print-type MPAIR?)
+(:print-type get-b1)
+(:print-type get-b2)
 
-(: mcar (∀ (+t1) (→ (Mutable-Pairof Nothing +t1 Nothing Any) +t1)))
-(: mcdr (∀ (+t2) (→ (Mutable-Pairof Nothing Any Nothing +t2) +t2)))
-(define (mcar p) (unbox (get-b1 p)))
-(define (mcdr p) (unbox (get-b2 p)))
+(: MCONS (∀ (t1 t2) (→ t1 t2 (Mutable-Pair t1 t1 t2 t2))))
+(define (MCONS v1 v2) (make-mpair (BOX v1) (BOX v2)))
 
-(: set-mcar! (∀ (-t1) (→ (Mutable-Pairof -t1 Any Nothing Any) -t1 Void)))
-(: set-mcdr! (∀ (-t2) (→ (Mutable-Pairof Nothing Any -t2 Any) -t2 Void)))
-(define (set-mcar! p v1) (set-box! (get-b1 p) v1))
-(define (set-mcdr! p v2) (set-box! (get-b2 p) v2))
+(: MCAR (∀ (+t1) (→ (Mutable-Pair Nothing +t1 Nothing Any) +t1)))
+(: MCDR (∀ (+t2) (→ (Mutable-Pair Nothing Any Nothing +t2) +t2)))
+(define (MCAR p) (UNBOX (get-b1 p)))
+(define (MCDR p) (UNBOX (get-b2 p)))
 
-(: p (Mutable-Pairof Natural Integer Zero Byte))
-(define p (mcons -1 1))
-(mpair? (ann p (Mutable-Pairof Byte Number Nothing Natural)))
+(: SET-MCAR! (∀ (-t1) (→ (Mutable-Pair -t1 Any Nothing Any) -t1 Void)))
+(: SET-MCDR! (∀ (-t2) (→ (Mutable-Pair Nothing Any -t2 Any) -t2 Void)))
+(define (SET-MCAR! p v1) (SET-BOX! (get-b1 p) v1))
+(define (SET-MCDR! p v2) (SET-BOX! (get-b2 p) v2))
 
-(mcar p)
-(set-mcar! p 1)
-(mcar p)
+(: p (Mutable-Pair Natural Integer Zero Byte))
+(define p (MCONS -1 1))
+(MPAIR? (ann p (Mutable-Pair Byte Number Nothing Natural)))
 
-(mcdr p)
-(set-mcdr! p 0)
-(mcdr p)
+(MCAR p)
+(SET-MCAR! p 1)
+(MCAR p)
+
+(MCDR p)
+(SET-MCDR! p 0)
+(MCDR p)
 ]
