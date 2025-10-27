@@ -3,7 +3,6 @@
 (require (for-syntax racket/base
                      racket/case
                      racket/list
-                     racket/pretty
                      racket/syntax
                      syntax/parse))
 
@@ -127,10 +126,11 @@
 
 (define-syntax (define-record-type stx)
   (syntax-parse stx
-    [(_ (t:type-para ...) Type:id
+    [(_ (~or* (~seq) () (t* ...+)) Type:id
         (make-record:id field-tag:tag ...)
         record?:id
         field-spec:spec ...)
+     #:with (t:type-para ...) (if (attribute t*) #'(t* ...) #'())
      #:with Typeof  (datum->syntax #f (syntax-e #'Type))
      #:with Typeof? (format-id #f "~a?" (syntax-e #'Type))
      #:with TypeTop (format-id #'Type "~aTop" (syntax-e #'Type))
@@ -143,28 +143,23 @@
        (syntax-e #'TypeTop)
        (syntax-e #'(t ...))
        (syntax-e #'((field-tag . field-spec) ...)))
-     (syntax/loc stx
+     (quasisyntax/loc stx
        (begin
          (struct (t ...) Typeof
            (field-tag.spec ...)
            #:constructor-name make-Typeof)
-
-         (define-type (Type t ...) (Typeof t ...))
-         (define-type TypeTop (Type t.Top ...))
-         (define-type TypeBot (Type t.Bot ...))
-
-         (: make-record (∀ (t0 ...) (→ field-tag.r0 ... (Type t.base ...))))
+         #,(if (attribute t*)
+               #'(begin
+                   (define-type (Type t ...) (Typeof t ...))
+                   (define-type TypeTop (Type t.Top ...))
+                   (define-type TypeBot (Type t.Bot ...))
+                   (: make-record (∀ (t0 ...) (→ field-tag.r0 ... (Type t.base ...)))))
+               #'(begin
+                   (define-type Type Typeof)
+                   (define-type TypeTop Type)
+                   (define-type TypeBot Type)
+                   (: make-record (→ field-tag.r0 ... Type))))
          (define (make-record field-tag.id ...)
            (make-Typeof field-tag.op ...))
          (define record? (cast Typeof? (pred TypeTop)))
-
-         field-def ...))]
-    [(_ Type:id
-        (make-record:id field-tag:tag ...)
-        record?:id
-        field-spec:spec ...)
-     (syntax/loc stx
-       (define-record-type () Type
-         (make-record field-tag ...)
-         record?
-         field-spec ...))]))
+         field-def ...))]))

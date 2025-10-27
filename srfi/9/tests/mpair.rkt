@@ -2,19 +2,6 @@
 
 (require "../../9.rkt" typed/rackunit)
 
-#;
-(begin
-  (define-record-type () Point
-    (make-point [x : Integer] [y : Integer])
-    point?
-    [x get-x]
-    [y get-y])
-
-  (define pt (make-point 1 2))
-  (displayln (get-x pt))
-  (displayln (get-y pt))
-  )
-
 (begin
   (define-record-type (-t1 +t1) Mutable-Boxof
     (box [v : -t1 +t1])
