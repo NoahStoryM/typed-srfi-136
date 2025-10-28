@@ -158,7 +158,7 @@
                          (hash-ref data-hash (syntax-e #'name) #f)]))]
                    #:when field-spec)
           (cons field-tag field-spec))))
-     #:with (field-def ...)
+     #:with field-def*
      (generate-field-accessors
       #'Type
       (syntax-e #'Type.this)
@@ -175,18 +175,21 @@
                 ;; Type definitions for polymorphic case
                 #`((define-type TypeTop (Type.this t.Top ...))
                    (define-type TypeBot (Type.this t.Bot ...))
-                   #,@(if (attribute make-record)
-                          #'((: make-record (∀ (t0 ...) (→ field-tag*.r0 ... (Type.this t.base ...))))
-                             (define (make-record field-tag*.id ...) (makeType field-tag*.op ...)))
-                          #'()))
+                   .
+                   #,(if (attribute make-record)
+                         #'((: make-record (∀ (t0 ...) (→ field-tag*.r0 ... (Type.this t.base ...))))
+                            (define (make-record field-tag*.id ...) (makeType field-tag*.op ...)))
+                         #'()))
                 ;; Type definitions for non-polymorphic case
                 #`((define-type TypeTop Type.this)
                    (define-type TypeBot Type.this)
-                   #,@(if (attribute make-record)
-                          #'((: make-record (→ field-tag*.r0 ... Type.this))
-                             (define (make-record field-tag*.id ...) (makeType field-tag*.op ...)))
-                          #'())))
+                   .
+                   #,(if (attribute make-record)
+                         #'((: make-record (→ field-tag*.r0 ... Type.this))
+                            (define (make-record field-tag*.id ...) (makeType field-tag*.op ...)))
+                         #'())))
          #,@(if (attribute record?)
                 #'((define record? (cast Typeof? (pred TypeTop))))
                 #'())
-         field-def ...))]))
+         .
+         field-def*))]))
