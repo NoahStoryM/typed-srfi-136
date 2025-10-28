@@ -50,10 +50,10 @@ is a subtype of @racket[(F w1 r1)] if and only if:
                             (constructor-name field-tag ...)]
           [predicate-spec #f
                           predicate-name]
-          [field-tag [field-name : write-type read-type]
-                     [field-name : read-type]]
-          [field-spec [field-name accessor-name mutator-name]
-                      [field-name accessor-name]])]{
+          [field-tag [field-name : read-type]
+                     [field-name : read-type write-type]]
+          [field-spec [field-name accessor-name]
+                      [field-name accessor-name mutator-name]])]{
 Defines a new @deftech{record type} with optional type parameters and
 @tech{variance} annotations.
 
@@ -80,7 +80,7 @@ Defines a new @deftech{record type} with optional type parameters and
   @item{A @racket[field-tag] specifies a field.
         @itemlist[
           @item{An immutable field has the form @racket[[field-name : read-type]].}
-          @item{A mutable field has the form @racket[[field-name : write-type read-type]].}
+          @item{A mutable field has the form @racket[[field-name : read-type write-type]].}
           @item{When inheriting, you must specify @italic{all} fields, including
                 the inherited fields.}
           ]}
@@ -137,7 +137,7 @@ data structures. The type @racket[(Mutable-Box Natural Integer)] means:
 
 @typed-srfi-136-examples[
 (define-record-type (-t1 +t1) Mutable-Box
-  (BOX [v : -t1 +t1])
+  (BOX [v : +t1 -t1])
   BOX?
   [v UNBOX SET-BOX!])
 
@@ -209,7 +209,7 @@ A hierarchy of point types with increasingly more dimensions:
 (point-0? p0)
 
 (define-record-type (-t1 +t1) (Point-1 Point-0)
-  (make-point-1 [p1 : -t1 +t1])
+  (make-point-1 [p1 : +t1 -t1])
   point-1?
   [p1 get-p1 set-p1!])
 
@@ -227,7 +227,7 @@ A hierarchy of point types with increasingly more dimensions:
 (get-p1 p1)
 
 (define-record-type (-t1 +t1 -t2 +t2) (Point-2 Point-1)
-  (make-point-2 [p1 : -t1 +t1] [p2 : -t2 +t2])
+  (make-point-2 [p1 : +t1 -t1] [p2 : +t2 -t2])
   point-2?
   [p2 get-p2 set-p2!])
 

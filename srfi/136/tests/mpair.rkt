@@ -4,7 +4,7 @@
 
 (begin
   (define-record-type (-t1 +t1) Mutable-Box
-    (box [v : -t1 +t1])
+    (box [v : +t1 -t1])
     box?
     [v unbox set-box!])
 

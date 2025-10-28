@@ -64,7 +64,7 @@
 (begin-for-syntax
   (define-syntax-class tag
     ;; Syntax class for field tags in constructor
-    [pattern [name:id (~datum :) w:type r:type]
+    [pattern [name:id (~datum :) r:type w:type]
              #:with id #'name
              #:with r0 #'r.base
              #:with spec #'[name : (case→ (→ r) (→ w Void))]
@@ -110,16 +110,16 @@
      (for/list ([field (in-list field*)])
        (syntax-parse field
          #:datum-literals (:)
-         [([name:id : w:type r:type] . [_ get:id set:id])
+         [([name:id : r:type w:type] . [_ get:id set:id])
           #:with Typeof-name:id (format-id #f "~aof-~a" Type #'name)
-          #:with ((-t:id ...) . -Top) (parse-type #'w)
           #:with ((+t:id ...) . +Top) (parse-type #'r)
+          #:with ((-t:id ...) . -Top) (parse-type #'w)
           (syntax/loc stx
             (begin
-              (: set (∀ (-t ...) (→ -Top w Void)))
               (: get (∀ (+t ...) (→ +Top r)))
-              (define (set record name) ((Typeof-name record) name))
-              (define (get record) ((Typeof-name record)))))]
+              (: set (∀ (-t ...) (→ -Top w Void)))
+              (define (get record) ((Typeof-name record)))
+              (define (set record name) ((Typeof-name record) name))))]
          [([name:id : t:type] . [_ get:id])
           #:with Typeof-name:id (format-id #f "~aof-~a" Type #'name)
           #:with ((+t:id ...) . +Top) (parse-type #'t)
