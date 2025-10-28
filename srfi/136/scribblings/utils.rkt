@@ -7,8 +7,8 @@
 
 (provide (all-defined-out))
 
-(define (make-typed-srfi-9-eval) (make-base-eval #:lang 'typed/racket/base '(require typed/srfi/9)))
-(define-syntax-rule (typed-srfi-9-examples body ...) (examples #:eval (make-typed-srfi-9-eval) body ...))
+(define (make-typed-srfi-136-eval) (make-base-eval #:lang 'typed/racket/base '(require typed/srfi/136)))
+(define-syntax-rule (typed-srfi-136-examples body ...) (examples #:eval (make-typed-srfi-136-eval) body ...))
 
 (define-syntax (define-tech stx)
   (syntax-parse stx

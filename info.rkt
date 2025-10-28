@@ -9,7 +9,7 @@
 (define deps '("base" "typed-racket-lib"))
 (define build-deps '("scribble-lib" "rackunit-typed" "racket-doc" "typed-racket-doc"))
 
-(define scribblings '(("srfi/9/scribblings/typed-srfi-9.scrbl")))
+(define scribblings '(("srfi/136/scribblings/typed-srfi-136.scrbl")))
 
 (define clean '("compiled" "private/compiled"))
 (define test-omit-paths '(#px"^((?!/tests/).)*$"))

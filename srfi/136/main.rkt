@@ -130,11 +130,12 @@
 
 (define-syntax (define-record-type stx)
   (syntax-parse stx
-    [(_ (~or* (~seq) () (t*:id ...+)) Type:type-spec
-        ((~or* #f make-record:id) field-tag*:tag ...)
+    [(_ (~or* (~seq) () (ts:id ...+)) Type:type-spec
+        (~or* #f (make-record:id . field-tags))
         (~or* #f record?:id)
         field-spec*:spec ...)
-     #:with (t:type-para ...) (if (attribute t*) #'(t* ...) #'())
+     #:with (t:type-para ...) (if (attribute ts) #'(ts ...) #'())
+     #:with (field-tag*:tag ...) (if (attribute field-tags) #'field-tags #'())
      #:with Typeof:id   (format-id #f "~aof"   (syntax-e #'Type.this))
      #:with Typeof?:id  (format-id #f "~aof?"  (syntax-e #'Type.this))
      #:with makeType:id (format-id #f "make~a" (syntax-e #'Type.this))
@@ -171,7 +172,7 @@
            (field-tag.spec ...)
            #:constructor-name makeType
            #:type-name Type.this)
-         #,@(if (attribute t*)
+         #,@(if (attribute ts)
                 ;; Type definitions for polymorphic case
                 #`((define-type TypeTop (Type.this t.Top ...))
                    (define-type TypeBot (Type.this t.Bot ...))

@@ -1,18 +1,19 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     typed/srfi/9)
+                     typed/srfi/136)
           "utils.rkt")
 
-@title{Typed SRFI 9: Defining Record Types with Variance Annotations}
-@defmodule[typed/srfi/9 #:packages ("typed-srfi-9")]
+@title{Typed SRFI 136: Extensible Record Types with Variance Annotations}
+@defmodule[typed/srfi/136 #:packages ("typed-srfi-136")]
 @author[@author+email["Noah Ma" "noahstorym@gmail.com"]]
 
 @section{Introduction}
 
-This library provides a typed version of SRFI 9 (Defining Record Types) for Typed
-Racket, with support for variance annotations on type parameters. It allows you
-to @racket[define] @tech{record types} with precise control over the
+This library provides a typed version of SRFI 136 (Extensible Record Types) for
+Typed Racket, with support for variance annotations on type parameters. It extends
+SRFI 9 by adding @deftech{inheritance}, allowing you to define @tech{record types}
+that extend existing @tech{record types}, with precise control over the
 @deftech{variance} of mutable and immutable fields.
 
 @tech{Variance} determines how subtyping relationships between type parameters
@@ -35,12 +36,20 @@ is a subtype of @racket[(F w1 r1)] if and only if:
 @section{Syntax}
 
 @defform[#:literals (:)
-         (define-record-type maybe-type-vars type-name
-           (constructor-name field-tag ...)
-           predicate-name
+         (define-record-type maybe-type-vars type-spec
+           constructor-spec
+           predicate-spec
            field-spec ...)
          #:grammar
-         ([maybe-type-vars (v ...)]
+         ([maybe-type-vars (code:line)
+                           (v ...)]
+          [type-spec type-name
+                     (type-name #f)
+                     (type-name parent)]
+          [constructor-spec #f
+                            (constructor-name field-tag ...)]
+          [predicate-spec #f
+                          predicate-name]
           [field-tag [field-name : write-type read-type]
                      [field-name : read-type]]
           [field-spec [field-name accessor-name mutator-name]
@@ -56,39 +65,59 @@ Defines a new @deftech{record type} with optional type parameters and
                 parameter. Top type is @racket[Nothing], bottom type is @racket[Any].}
           @item{@litchar{+} prefix or no prefix (e.g., @racket[+t] or @racket[t]):
                 @tech{Covariant} parameter. Top type is @racket[Any], bottom type
-                is @racket[Nothing].}]}
-  @item{@racket[type-name] is the name of the new @tech{record type}.}
-  @item{@racket[constructor-name] is the name of the constructor procedure.}
+                is @racket[Nothing].}
+          ]}
+  @item{@racket[type-spec] specifies the @tech{record type} name and optional
+        @racket[parent]:
+        @itemlist[
+          @item{@racket[type-name] or @racket[(type-name #f)]: defines a new
+                base @tech{record type}.}
+          @item{@racket[(type-name parent)]: defines a @tech{record type} that
+                @deftech{inherit}s from @racket[parent], including all its fields}
+          ]}
+  @item{@racket[constructor-name] is the name of the constructor procedure.
+        Use @racket[#f] to skip constructor generation.}
   @item{A @racket[field-tag] specifies a field.
         @itemlist[
           @item{An immutable field has the form @racket[[field-name : read-type]].}
-          @item{A mutable field has the form @racket[[field-name : write-type read-type]].}]}
-  @item{@racket[predicate-name] is the name of the predicate procedure.}
-  @item{A @racket[field-spec] specifies the accessor and optional mutator.
-        An immutable field has an accessor, while a mutable field has both an
-        accessor and a mutator.}
-]
+          @item{A mutable field has the form @racket[[field-name : write-type read-type]].}
+          @item{When inheriting, you must specify @italic{all} fields, including
+                the inherited fields.}
+          ]}
+  @item{@racket[predicate-name] is the name of the predicate procedure.
+        Use @racket[#f] to skip predicate generation.}
+  @item{A @racket[field-spec] specifies the accessor and optional mutator:
+        @itemlist[
+          @item{An immutable field has only an accessor.}
+          @item{A mutable field has both an accessor and a mutator.}
+          @item{When inheriting, you only specify the @italic{new} fields added
+                by this @tech{record type}, not the inherited fields.}
+          ]}
+  ]
 
 This form defines the following:
 
 @itemlist[
-  @item{A struct type named @racket[type-name].}
+  @item{A struct type named @racket[type-name] that optionally extends
+        @racket[parent].}
   @item{Type aliases:
         @itemlist[
           @item{@racket[type-name]@racketidfont{Top}: all parameters at their top bound
                 (e.g., @racket[Any] for @tech{covariant}, @racket[Nothing] for @tech{contravariant}).}
           @item{@racket[type-name]@racketidfont{Bot}: all parameters at their bottom bound
-                (e.g., @racket[Nothing] for @tech{covariant}, @racket[Any] for @tech{contravariant}).}]}
-  @item{A @racket[constructor-name] procedure to create instances of the record.
+                (e.g., @racket[Nothing] for @tech{covariant}, @racket[Any] for @tech{contravariant}).}
+          ]}
+  @item{A @racket[constructor-name] procedure (if not @racket[#f]) to create instances.
         For mutable fields, the @racket[write-type] must be a subtype of the
         @racket[read-type]. To satisfy this subtyping constraint from the very
         beginning in the simplest way, the @tech{variance} prefixes
         (@litchar{-} and @litchar{+}) are stripped from the type parameters
         when generating the constructor's type.}
-  @item{A @racket[predicate-name] procedure (predicate for @racket[type-name]@racketidfont{Top}).}
-  @item{An @racket[accessor-name] for each field.}
-  @item{A @racket[mutator-name] for each mutable field.}
-]
+  @item{A @racket[predicate-name] procedure (if not @racket[#f]) that tests for
+        @racket[type-name]@racketidfont{Top}.}
+  @item{An @racket[accessor-name] for each specified field.}
+  @item{A @racket[mutator-name] for each specified mutable field.}
+  ]
 }
 
 @section{Examples}
@@ -104,9 +133,9 @@ data structures. The type @racket[(Mutable-Box Natural Integer)] means:
         into the box, demonstrating @deftech{contravariance} of the write type.}
   @item{You can @italic{read} values of type @racket[Integer] (or any supertype)
         from the box, demonstrating @deftech{covariance} of the read type.}
-]
+  ]
 
-@typed-srfi-9-examples[
+@typed-srfi-136-examples[
 (define-record-type (-t1 +t1) Mutable-Box
   (BOX [v : -t1 +t1])
   BOX?
@@ -161,4 +190,62 @@ data structures. The type @racket[(Mutable-Box Natural Integer)] means:
 (MCDR p)
 (SET-MCDR! p 0)
 (MCDR p)
+]
+@subsection{Inheritance}
+
+A hierarchy of point types with increasingly more dimensions:
+
+@typed-srfi-136-examples[
+(define-record-type Point #f #f)
+
+(define-record-type () (Point-0 Point)
+  (make-point-0)
+  point-0?)
+
+(:print-type make-point-0)
+(:print-type point-0?)
+
+(define p0 (make-point-0))
+(point-0? p0)
+
+(define-record-type (-t1 +t1) (Point-1 Point-0)
+  (make-point-1 [p1 : -t1 +t1])
+  point-1?
+  [p1 get-p1 set-p1!])
+
+(:print-type make-point-1)
+(:print-type point-1?)
+(:print-type get-p1)
+(:print-type set-p1!)
+
+(define p1 (make-point-1 1))
+(point-0? p1)
+(point-1? p1)
+
+(get-p1 p1)
+(set-p1! p1 -1)
+(get-p1 p1)
+
+(define-record-type (-t1 +t1 -t2 +t2) (Point-2 Point-1)
+  (make-point-2 [p1 : -t1 +t1] [p2 : -t2 +t2])
+  point-2?
+  [p2 get-p2 set-p2!])
+
+(:print-type make-point-2)
+(:print-type point-2?)
+(:print-type get-p2)
+(:print-type set-p2!)
+
+(define p2 (make-point-2 1 2))
+(point-0? p2)
+(point-1? p2)
+(point-2? p2)
+
+(get-p1 p2)
+(set-p1! p2 -1)
+(get-p1 p2)
+
+(get-p2 p2)
+(set-p2! p2 -2)
+(get-p2 p2)
 ]
