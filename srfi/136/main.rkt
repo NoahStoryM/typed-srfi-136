@@ -81,7 +81,7 @@
     [pattern [name:id get:id]]))
 
 (begin-for-syntax
-  (define (generate-field-accessors stx Type TypeTop t* field*)
+  (define (generate-field-definitions stx Type TypeTop t* field*)
     ;; Generate accessor/mutator definitions for record fields
     ;; Returns a list of definitions for getters and setters
     (define (parse-type T)
@@ -160,7 +160,7 @@
                    #:when field-spec)
           (cons field-tag field-spec))))
      #:with field-def*
-     (generate-field-accessors
+     (generate-field-definitions
       #'Type
       (syntax-e #'Type.this)
       (syntax-e #'TypeTop)
