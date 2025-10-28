@@ -41,6 +41,15 @@
        (datum->syntax stx (map strip-variance-prefix e))]
       [else stx]))
 
+  (define-syntax-class type-spec
+    ;; Syntax class for type specification
+    [pattern (~or* name:id (name:id #f))
+             #:with this #'name
+             #:with super #'#f]
+    [pattern (name:id parent:id)
+             #:with this #'name
+             #:with super #'parent])
+
   (define-syntax-class type-para
     ;; Syntax class for type parameters with variance annotations
     [pattern t:id
@@ -102,7 +111,7 @@
        (syntax-parse field
          #:datum-literals (:)
          [([name:id : w:type r:type] . [_ get:id set:id])
-          #:with Typeof-name:id (format-id #f "~a-~a" Type #'name)
+          #:with Typeof-name:id (format-id #f "~aof-~a" Type #'name)
           #:with ((-t:id ...) . -Top) (parse-type #'w)
           #:with ((+t:id ...) . +Top) (parse-type #'r)
           (syntax/loc stx
@@ -112,7 +121,7 @@
               (define (set record name) ((Typeof-name record) name))
               (define (get record) ((Typeof-name record)))))]
          [([name:id : t:type] . [_ get:id])
-          #:with Typeof-name:id (format-id #f "~a-~a" Type #'name)
+          #:with Typeof-name:id (format-id #f "~aof-~a" Type #'name)
           #:with ((+t:id ...) . +Top) (parse-type #'t)
           (syntax/loc stx
             (begin
@@ -121,55 +130,63 @@
 
 (define-syntax (define-record-type stx)
   (syntax-parse stx
-    [(_ (~or* (~seq) () (t*:id ...+)) Type:id
-        (make-record:id field-tag:tag ...)
-        record?:id
-        .
-        field-spec*)
+    [(_ (~or* (~seq) () (t*:id ...+)) Type:type-spec
+        ((~or* #f make-record:id) field-tag*:tag ...)
+        (~or* #f record?:id)
+        field-spec*:spec ...)
      #:with (t:type-para ...) (if (attribute t*) #'(t* ...) #'())
-     #:with Typeof:id  (datum->syntax #f (syntax-e #'Type))
-     #:with Typeof?:id (format-id #f "~a?" (syntax-e #'Type))
-     #:with TypeTop:id (format-id #'Type "~aTop" (syntax-e #'Type))
-     #:with TypeBot:id (format-id #'Type "~aBot" (syntax-e #'Type))
+     #:with Typeof:id   (format-id #f "~aof"   (syntax-e #'Type.this))
+     #:with Typeof?:id  (format-id #f "~aof?"  (syntax-e #'Type.this))
+     #:with makeType:id (format-id #f "make~a" (syntax-e #'Type.this))
+     #:with TypeTop:id (format-id #'Type "~aTop" (syntax-e #'Type.this))
+     #:with TypeBot:id (format-id #'Type "~aBot" (syntax-e #'Type.this))
+     #:with (name-spec ...) (if (syntax-e #'Type.super) #'(Typeof Type.super) #'(Typeof))
      #:with (t0:id ...) (datum->syntax #'Type (remove-duplicates (syntax->datum #'(t.base ...))))
-     #:with (field-spec:spec ...)
+     #:with ((field-tag:tag . field-spec:spec) ...)
      ;; Match field specifications with field tags
      (let ([data-hash
-            (for/hasheq ([field-spec (in-list (syntax->list #'field-spec*))])
+            (for/hasheq ([field-spec (in-list (syntax->list #'(field-spec* ...)))])
               (syntax-parse field-spec
                 [[name:id . _]
                  (values (syntax-e #'name) field-spec)]))])
-       (datum->syntax #'field-spec*
-        (for/list ([field-tag (in-list (syntax->list #'(field-tag ...)))])
-          (syntax-parse field-tag
-            [[name:id . _]
-             (hash-ref data-hash (syntax-e #'name))]))))
+       (datum->syntax #'(field-spec* ...)
+        (for/list ([field-tag (in-list (syntax->list #'(field-tag* ...)))]
+                   #:do
+                   [(define field-spec
+                      (syntax-parse field-tag
+                        [[name:id . _]
+                         (hash-ref data-hash (syntax-e #'name) #f)]))]
+                   #:when field-spec)
+          (cons field-tag field-spec))))
      #:with (field-def ...)
      (generate-field-accessors
-       #'Type
-       (syntax-e #'Type)
-       (syntax-e #'TypeTop)
-       (syntax-e #'(t ...))
-       (syntax-e #'((field-tag . field-spec) ...)))
+      #'Type
+      (syntax-e #'Type.this)
+      (syntax-e #'TypeTop)
+      (syntax-e #'(t ...))
+      (syntax-e #'((field-tag . field-spec) ...)))
      (quasisyntax/loc stx
        (begin
-         (struct (t ...) Typeof
+         (struct (t ...) name-spec ...
            (field-tag.spec ...)
-           #:constructor-name make-Typeof)
-         #,(if (attribute t*)
-               ;; Type definitions for polymorphic case
-               #'(begin
-                   (define-type (Type t ...) (Typeof t ...))
-                   (define-type TypeTop (Type t.Top ...))
-                   (define-type TypeBot (Type t.Bot ...))
-                   (: make-record (∀ (t0 ...) (→ field-tag.r0 ... (Type t.base ...)))))
-               ;; Type definitions for non-polymorphic case
-               #'(begin
-                   (define-type Type Typeof)
-                   (define-type TypeTop Type)
-                   (define-type TypeBot Type)
-                   (: make-record (→ field-tag.r0 ... Type))))
-         (define (make-record field-tag.id ...)
-           (make-Typeof field-tag.op ...))
-         (define record? (cast Typeof? (pred TypeTop)))
+           #:constructor-name makeType
+           #:type-name Type.this)
+         #,@(if (attribute t*)
+                ;; Type definitions for polymorphic case
+                #`((define-type TypeTop (Type.this t.Top ...))
+                   (define-type TypeBot (Type.this t.Bot ...))
+                   #,@(if (attribute make-record)
+                          #'((: make-record (∀ (t0 ...) (→ field-tag*.r0 ... (Type.this t.base ...))))
+                             (define (make-record field-tag*.id ...) (makeType field-tag*.op ...)))
+                          #'()))
+                ;; Type definitions for non-polymorphic case
+                #`((define-type TypeTop Type.this)
+                   (define-type TypeBot Type.this)
+                   #,@(if (attribute make-record)
+                          #'((: make-record (→ field-tag*.r0 ... Type.this))
+                             (define (make-record field-tag*.id ...) (makeType field-tag*.op ...)))
+                          #'())))
+         #,@(if (attribute record?)
+                #'((define record? (cast Typeof? (pred TypeTop))))
+                #'())
          field-def ...))]))

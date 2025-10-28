@@ -93,6 +93,8 @@ This form defines the following:
 
 @section{Examples}
 
+@subsection{Mutable Boxes and Pairs}
+
 A simple mutable box demonstrating @tech{variance}, and a mutable pair composed
 from mutable boxes, illustrating how @tech{variance} propagates through nested
 data structures. The type @racket[(Mutable-Box Natural Integer)] means:
