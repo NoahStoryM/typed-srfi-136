@@ -53,7 +53,7 @@
   (define-syntax-class type-para
     ;; Syntax class for type parameters with variance annotations
     [pattern t:id
-             #:with base (strip-variance-prefix  #'t)
+             #:with base (strip-variance-prefix #'t)
              #:with Top (variance->top-type #'t)
              #:with Bot (variance->bot-type #'t)])
 
