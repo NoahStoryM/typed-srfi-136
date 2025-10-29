@@ -68,12 +68,18 @@
              #:with id #'name
              #:with r0 #'r.base
              #:with spec #'[name : (→ r)]
-             #:with op #'(λ () name)]
+             #:with op
+             (let ([op (format-id #'name "current-~a" #'name)])
+               #`(let ([#,op (λ () name)])
+                   #,op))]
     [pattern [name:id (~datum :) r:type w:type]
              #:with id #'name
              #:with r0 #'r.base
              #:with spec #'[name : (case→ (→ r) (→ w Void))]
-             #:with op #'(case-λ [() name] [([v : w.base]) (set! name v)])])
+             #:with op
+             (let ([op (format-id #'name "current-~a" #'name)])
+               #`(let ([#,op (case-λ [() name] [([v : w.base]) (set! name v)])])
+                   #,op))])
 
   (define-syntax-class spec
     ;; Syntax class for field specifications (getter/setter names)
