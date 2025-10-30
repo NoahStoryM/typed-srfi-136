@@ -96,7 +96,7 @@
       (with-handlers ([exn:fail:contract? (λ (_) #f)])
         (make-struct-field-mutator mutator-proc i)
         (λ ([rt : <record>] v)
-          (((unsafe-cast accessor-proc (→ <record> Integer (→ Any Void)))
+          (((unsafe-cast mutator-proc (→ <record> Integer (→ Any Void)))
             rt i)
            v))))
     (list name get set)))
