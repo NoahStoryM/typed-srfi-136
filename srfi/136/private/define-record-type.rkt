@@ -150,9 +150,9 @@
      #:with <This>:id        (format-id #f "~a"  #'This)
      #:with This?:id         (format-id #f "~a?" #'This)
      #:with makeThis:id      (format-id #f "make~a" #'This)
-     #:with record-This:id (format-id #'this "record:~a"  #'This)
-     #:with ThisTop:id     (format-id #'This "~aTop" #'This)
-     #:with ThisBot:id     (format-id #'This "~aBot" #'This)
+     #:with record-This:id (format-id stx "record:~a" #'This)
+     #:with ThisTop:id (format-id #'This "~aTop" #'This)
+     #:with ThisBot:id (format-id #'This "~aBot" #'This)
      #:with (t0:id ...) (datum->syntax #'This (remove-duplicates (syntax->datum #'(t.base ...))))
      #:with ((field-tag:tag . field-spec:spec) ...)
      ;; Match field specifications with field tags
