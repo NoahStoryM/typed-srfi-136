@@ -1,5 +1,13 @@
 #lang typed/racket/base
 
-(provide (struct-out record) <record>)
+(provide record-inspector
+         record-type-inspector
+         (struct-out <record>)
+         (rename-out [<record>? record?]))
 
-(struct record () #:type-name <record>)
+(define struct-inspector (current-inspector))
+(define record-inspector (make-sibling-inspector))
+(define record-type-inspector (make-inspector record-inspector))
+(current-inspector record-type-inspector)
+(struct <record> ())
+(current-inspector struct-inspector)
