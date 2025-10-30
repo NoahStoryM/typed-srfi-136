@@ -144,7 +144,7 @@
         field-spec*:spec ...)
      #:with (t:type-para ...) (if (attribute ts) #'(ts ...) #'())
      #:with (field-tag*:tag ...) (if (attribute field-tags) #'field-tags #'())
-     #:with This:id #'T.this
+     #:with This:id    #'T.this
      #:with <Super>:id #'T.super
      #:with <This>:id   (format-id #f "~a"  #'This)
      #:with This?:id    (format-id #f "~a?" #'This)
@@ -172,7 +172,7 @@
      (generate-field-definitions
       #'This
       (syntax-e #'This)
-      (syntax-e #'ThisTop)
+      (syntax-e (if (attribute ts) #'ThisTop #'This))
       (syntax-e #'(t ...))
       (syntax-e #'((field-tag . field-spec) ...)))
      (quasisyntax/loc stx
@@ -194,9 +194,7 @@
                          #'((define record? (cast This? (pred ThisTop))))
                          #'()))
                 ;; Type definitions for non-polymorphic case
-                #`((define-type ThisTop This)
-                   (define-type ThisBot This)
-                   #,@(if (attribute make-record)
+                #`(#,@(if (attribute make-record)
                           #'((: make-record (→ field-tag*.r0 ... This))
                              (define (make-record field-tag*.id ...) (makeType field-tag*.op ...)))
                           #'())

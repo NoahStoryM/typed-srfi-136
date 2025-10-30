@@ -76,7 +76,7 @@ Defines a new @deftech{record type} with optional type parameters and
                 @deftech{inherit}s from @racket[parent], including all its fields}
           ]}
   @item{@racket[constructor-name] is the name of the constructor procedure.
-        Use @racket[#f] to skip constructor generation.}
+        If @racket[#f], no constructor is generated.}
   @item{A @racket[field-tag] specifies a field.
         @itemlist[
           @item{An immutable field has the form @racket[[field-name : read-type]].}
@@ -85,7 +85,7 @@ Defines a new @deftech{record type} with optional type parameters and
                 the inherited fields.}
           ]}
   @item{@racket[predicate-name] is the name of the predicate procedure.
-        Use @racket[#f] to skip predicate generation.}
+        If @racket[#f], no predicate is generated.}
   @item{A @racket[field-spec] specifies the accessor and optional mutator:
         @itemlist[
           @item{An immutable field has only an accessor.}
@@ -100,7 +100,7 @@ This form defines the following:
 @itemlist[
   @item{A struct type named @racket[type-name] that optionally extends
         @racket[parent].}
-  @item{Type aliases:
+  @item{Type aliases (if the type parameters are not @racket[()]) :
         @itemlist[
           @item{@racket[type-name]@racketidfont{Top}: all parameters at their top bound
                 (e.g., @racket[Any] for @tech{covariant}, @racket[Nothing] for @tech{contravariant}).}
@@ -121,7 +121,8 @@ This form defines the following:
 }
 
 @defproc[(record? [v Any]) Boolean]{
-Returns @racket[#t] if @racket[v] is a @tech{record type}, @racket[#f] otherwise.
+Returns @racket[#t] if @racket[v] is an instance of a record,
+@racket[#f] otherwise.
 }
 
 @typed-srfi-136-examples[
@@ -201,7 +202,7 @@ data structures. The type @racket[(Mutable-Box Natural Integer)] means:
 ]
 @subsection{Inheritance}
 
-A hierarchy of point types with increasingly more dimensions:
+A hierarchy of point types with increasingly dimensions:
 
 @typed-srfi-136-examples[
 (define-record-type Point #f #f)
