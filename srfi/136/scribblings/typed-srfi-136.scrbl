@@ -100,7 +100,7 @@ This form defines the following:
 @itemlist[
   @item{A struct type named @racket[type-name] that optionally extends
         @racket[parent].}
-  @item{Type aliases (if the type parameters are not @racket[()]) :
+  @item{Type aliases (if the type parameters are not @racket[()]):
         @itemlist[
           @item{@racket[type-name]@racketidfont{Top}: all parameters at their top bound
                 (e.g., @racket[Any] for @tech{covariant}, @racket[Nothing] for @tech{contravariant}).}
