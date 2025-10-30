@@ -183,21 +183,24 @@
                 ;; Type definitions for polymorphic case
                 #`((define-type TypeTop (Type t.Top ...))
                    (define-type TypeBot (Type t.Bot ...))
+                   #,@(if (attribute make-record)
+                          #'((: make-record (∀ (t0 ...) (→ field-tag*.r0 ... (Type t.base ...))))
+                             (define (make-record field-tag*.id ...) (makeType field-tag*.op ...)))
+                          #'())
                    .
-                   #,(if (attribute make-record)
-                         #'((: make-record (∀ (t0 ...) (→ field-tag*.r0 ... (Type t.base ...))))
-                            (define (make-record field-tag*.id ...) (makeType field-tag*.op ...)))
+                   #,(if (attribute record?)
+                         #'((define record? (cast Type? (pred TypeTop))))
                          #'()))
                 ;; Type definitions for non-polymorphic case
                 #`((define-type TypeTop Type)
                    (define-type TypeBot Type)
+                   #,@(if (attribute make-record)
+                          #'((: make-record (→ field-tag*.r0 ... Type))
+                             (define (make-record field-tag*.id ...) (makeType field-tag*.op ...)))
+                          #'())
                    .
-                   #,(if (attribute make-record)
-                         #'((: make-record (→ field-tag*.r0 ... Type))
-                            (define (make-record field-tag*.id ...) (makeType field-tag*.op ...)))
+                   #,(if (attribute record?)
+                         #'((define record? Type?))
                          #'())))
-         #,@(if (attribute record?)
-                #'((define record? (cast Type? (pred TypeTop))))
-                #'())
          .
          field-def*))]))
