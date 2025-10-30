@@ -106,8 +106,6 @@
        (Record-TypeTop)
        Record-TypeTop))
 (define (make-record-type-descriptor name fieldspecs [super-type record:<record>])
-  (define init-field-cnt (length fieldspecs))
-  (define auto-field-cnt 0)
   (define-values (this-type
                   constructor-proc
                   predicate-proc
