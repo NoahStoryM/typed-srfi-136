@@ -33,7 +33,7 @@ is a subtype of @racket[(F w1 r1)] if and only if:
   @item{@racket[r2] is a subtype of @racket[r1]}
   ]
 
-@section{Syntax}
+@section{API Reference}
 
 @defform[#:literals (:)
          (define-record-type maybe-type-vars type-spec
@@ -119,6 +119,14 @@ This form defines the following:
   @item{A @racket[mutator-name] for each specified mutable field.}
   ]
 }
+
+@defproc[(record? [v Any]) Boolean]{
+Returns @racket[#t] if @racket[v] is a @tech{record type}, @racket[#f] otherwise.
+}
+
+@typed-srfi-136-examples[
+(:print-type record?)
+]
 
 @section{Examples}
 

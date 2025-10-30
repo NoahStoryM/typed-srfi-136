@@ -10,6 +10,7 @@
 
   (: b (Mutable-Box Natural Integer))
   (define b (box -111))
+  (check-pred record? b)
   (check-pred box? b)
   (check-pred box? (ann b (Mutable-Box Byte Number)))
 
@@ -40,6 +41,7 @@
 
   (: p (Mutable-Pair Natural Integer Zero Byte))
   (define p (mcons -1 1))
+  (check-pred record? p)
   (check-pred mpair? p)
   (check-pred mpair? (ann p (Mutable-Pair Byte Number Nothing Natural)))
 

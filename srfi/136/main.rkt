@@ -3,10 +3,12 @@
 (require (for-syntax racket/base
                      racket/case
                      racket/list
+                     racket/pretty
                      racket/syntax
-                     syntax/parse))
+                     syntax/parse)
+         "private/types.rkt")
 
-(provide define-record-type)
+(provide <record> record? define-record-type)
 
 
 (begin-for-syntax
@@ -142,14 +144,14 @@
         field-spec*:spec ...)
      #:with (t:type-para ...) (if (attribute ts) #'(ts ...) #'())
      #:with (field-tag*:tag ...) (if (attribute field-tags) #'field-tags #'())
-     #:with Type:id #'T.this
-     #:with <Type>:id   (format-id #f "~a"  #'Type)
-     #:with Type?:id    (format-id #f "~a?" #'Type)
-     #:with makeType:id (format-id #f "make~a" #'Type)
-     #:with TypeTop:id (format-id #'Type "~aTop" #'Type)
-     #:with TypeBot:id (format-id #'Type "~aBot" #'Type)
-     #:with (name-spec ...) (if (syntax-e #'T.super) #'(<Type> T.super) #'(<Type>))
-     #:with (t0:id ...) (datum->syntax #'Type (remove-duplicates (syntax->datum #'(t.base ...))))
+     #:with This:id #'T.this
+     #:with <Super>:id (if (syntax-e #'T.super) #'T.super #'<record>)
+     #:with <This>:id   (format-id #f "~a"  #'This)
+     #:with This?:id    (format-id #f "~a?" #'This)
+     #:with makeThis:id (format-id #f "make~a" #'This)
+     #:with ThisTop:id (format-id #'This "~aTop" #'This)
+     #:with ThisBot:id (format-id #'This "~aBot" #'This)
+     #:with (t0:id ...) (datum->syntax #'This (remove-duplicates (syntax->datum #'(t.base ...))))
      #:with ((field-tag:tag . field-spec:spec) ...)
      ;; Match field specifications with field tags
      (let ([data-hash
@@ -168,39 +170,39 @@
           (cons field-tag field-spec))))
      #:with field-def*
      (generate-field-definitions
-      #'Type
-      (syntax-e #'Type)
-      (syntax-e #'TypeTop)
+      #'This
+      (syntax-e #'This)
+      (syntax-e #'ThisTop)
       (syntax-e #'(t ...))
       (syntax-e #'((field-tag . field-spec) ...)))
      (quasisyntax/loc stx
        (begin
-         (struct (t ...) name-spec ...
+         (struct (t ...) <This> <Super>
            (field-tag.spec ...)
            #:constructor-name makeType
-           #:type-name Type)
+           #:type-name This)
          #,@(if (attribute ts)
                 ;; Type definitions for polymorphic case
-                #`((define-type TypeTop (Type t.Top ...))
-                   (define-type TypeBot (Type t.Bot ...))
+                #`((define-type ThisTop (This t.Top ...))
+                   (define-type ThisBot (This t.Bot ...))
                    #,@(if (attribute make-record)
-                          #'((: make-record (∀ (t0 ...) (→ field-tag*.r0 ... (Type t.base ...))))
+                          #'((: make-record (∀ (t0 ...) (→ field-tag*.r0 ... (This t.base ...))))
                              (define (make-record field-tag*.id ...) (makeType field-tag*.op ...)))
                           #'())
                    .
                    #,(if (attribute record?)
-                         #'((define record? (cast Type? (pred TypeTop))))
+                         #'((define record? (cast This? (pred ThisTop))))
                          #'()))
                 ;; Type definitions for non-polymorphic case
-                #`((define-type TypeTop Type)
-                   (define-type TypeBot Type)
+                #`((define-type ThisTop This)
+                   (define-type ThisBot This)
                    #,@(if (attribute make-record)
-                          #'((: make-record (→ field-tag*.r0 ... Type))
+                          #'((: make-record (→ field-tag*.r0 ... This))
                              (define (make-record field-tag*.id ...) (makeType field-tag*.op ...)))
                           #'())
                    .
                    #,(if (attribute record?)
-                         #'((define record? Type?))
+                         #'((define record? This?))
                          #'())))
          .
          field-def*))]))
