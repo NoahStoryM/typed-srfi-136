@@ -6,7 +6,8 @@
                      racket/pretty
                      racket/syntax
                      syntax/parse)
-         "types.rkt")
+         "types.rkt"
+         "type-descriptors.rkt")
 
 (provide define-record-type)
 
@@ -185,7 +186,7 @@
            (field-tag.spec ...)
            #:constructor-name makeType
            #:type-name This)
-         (define record-This struct-<This>)
+         (define record-This (std->rtd struct-<This>))
          (current-inspector (cast struct-inspector Inspector)) ; FIXME no `cast'
          #,@(if (attribute ts)
                 ;; Type definitions for polymorphic case

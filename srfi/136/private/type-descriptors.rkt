@@ -4,7 +4,7 @@
          (rename-in typed/racket/base/optional
                     [cast unsafe-cast]))
 
-(provide Record-TypeTop
+(provide Record-TypeTop std->rtd
          record:<record>
          record-type-descriptor?
          record-type-descriptor
