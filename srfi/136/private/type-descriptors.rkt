@@ -116,7 +116,7 @@
     (make-struct-type name super-type (length fieldspecs) 0 #f '() record-type-inspector))
   (std->rtd this-type))
 
-(: make-record (→ Record-TypeTop (Vectorof Any) <record>))
+(: make-record (→ Record-TypeTop VectorTop <record>))
 (define (make-record rkd field-vector)
   (define constructor-proc (unsafe-cast (record-type-constructor rkd) (→ Any * <record>)))
   (apply constructor-proc (vector->list field-vector)))
