@@ -47,7 +47,7 @@
     ;; Syntax class for type specification
     [pattern (~or* name:id (name:id #f))
              #:with this #'name
-             #:with super #'#f]
+             #:with super #'<record>]
     [pattern (name:id parent:id)
              #:with this #'name
              #:with super #'parent])
@@ -145,7 +145,7 @@
      #:with (t:type-para ...) (if (attribute ts) #'(ts ...) #'())
      #:with (field-tag*:tag ...) (if (attribute field-tags) #'field-tags #'())
      #:with This:id #'T.this
-     #:with <Super>:id (if (syntax-e #'T.super) #'T.super #'<record>)
+     #:with <Super>:id #'T.super
      #:with <This>:id   (format-id #f "~a"  #'This)
      #:with This?:id    (format-id #f "~a?" #'This)
      #:with makeThis:id (format-id #f "make~a" #'This)
